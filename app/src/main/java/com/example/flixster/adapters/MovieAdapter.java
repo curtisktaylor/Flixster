@@ -1,25 +1,35 @@
 package com.example.flixster.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.view.menu.MenuView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.example.flixster.DetailActivity;
 import com.example.flixster.R;
 import com.example.flixster.models.Movie;
 
+import org.parceler.Parcels;
+
 import java.util.List;
+
+import jp.wasabeef.glide.transformations.RoundedCornersTransformation;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
+    RelativeLayout container;
     Context context;
     List<Movie> movies;
 
@@ -64,11 +74,29 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
             tvTitle = itemView.findViewById(R.id.tvTitle);
             tvOverview = itemView.findViewById(R.id.tvOverview);
             ivPoster = itemView.findViewById(R.id.ivPoster);
+            container = itemView.findViewById(R.id.container);
         }
 
         public void bind(Movie movie) {
             tvTitle.setText(movie.getTitle());
-            tvOverview.setText(movie.getOverview());
+
+
+            String overviewText = movie.getOverview();
+            if(context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                if(overviewText.length() > 500){
+                    overviewText = overviewText.substring(0, 500) + "...";
+                }
+            } else{
+                if(tvTitle.getText().length() > 20){
+                    tvTitle.setTextSize(20);
+                }
+                if(overviewText.length() > 300){
+                    overviewText = overviewText.substring(0, 300) + "...";
+                }
+            }
+
+            tvOverview.setText(overviewText);
+
             String imageURL;
 
             if(context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
@@ -77,7 +105,17 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
                 imageURL = movie.getPosterPath();
             }
 
-            Glide.with(context).load(imageURL).into(ivPoster);
+            //1. Register click listener on whole row
+            //2. Navigate to a new activity on tap
+            Glide.with(context).load(imageURL).transform(new RoundedCornersTransformation(30, 10)).into(ivPoster);
+            container.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent i = new Intent(context, DetailActivity.class);
+                    i.putExtra("movie", Parcels.wrap(movie));
+                    context.startActivity(i);
+                }
+            });
         }
     }
 
